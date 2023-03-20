@@ -11,10 +11,13 @@
 #include<stdio.h>
 #include<stdlib.h>
 #include<string.h>
-#define MAX_PROCESSES 2000
+#include <limits.h>
+#define MAX_PROCESSES 300
+#define MAX_NAME_LENGTH 3
 
 // structure to store process data
 typedef struct {
+    char name[MAX_NAME_LENGTH];
     int pid;
     int arrival_time;
     int burst_time;
@@ -25,20 +28,15 @@ typedef struct {
 } Process;
 
 
-
-
 // Function prototypes
 int read_processes(Process processes[], char* filename);
-void simulateFCFS();
-void simulateSJF();
-void simulateRR();
+void simulateFCFS(Process processes[], int num_processes);
+void simulateSJF(Process processes[], int num_processes);
+void simulateRR(Process processes[], int num_processes, int quantum);
 
-
+// main method
 int main(int argc, char* argv[]) {
-    
-    Process processes[MAX_PROCESSES];
 
-    printf('entered main at least...\n');
     char* algorithm="";
     char* filename="";
     int quantum = 0;
@@ -52,14 +50,29 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-    // Get algorithm parameter
-    strcpy(algorithm, argv[1]);
+    // Set algorithm parameter
+    algorithm = argv[1];   
 
-    // Get filename parameter
-    strcpy(filename, argv[2]);
+    // based on command line input, set filename parameter and quantum value if applicable
+    if (strcmp(algorithm, "-r") == 0){
+        quantum = atoi(argv[2]);
+        filename = argv[3]; // if RR selected, set filename from 3rd index of argv CLI
+    }
+    else{
+        filename = argv[2]; // if RR not selected, set filename from 2nd index of argv CLI
+
+    }
+
+
+    
+    printf("filename: %s\n", filename);
+    printf("quantum: %d\n",quantum);
+
+    // initialize processes array 
+    Process array[MAX_PROCESSES];
 
     // Read processes from file
-    read_processes(processes, filename);
+    int num_processes = read_processes(array, filename);
 
     printf("\nread_processes ran successfully...\n");
 
@@ -77,7 +90,9 @@ int main(int argc, char* argv[]) {
 
     // Simulate selected algorithm
     if (strcmp(algorithm, "-f") == 0) {
-        simulateFCFS();
+        // simulateFCFS();
+        printf("this would simulate SJF");
+
     } else if (strcmp(algorithm, "-s") == 0) {
         // simulateSJF();
         printf("this would simulate SJF");
@@ -100,46 +115,60 @@ int main(int argc, char* argv[]) {
 int read_processes(Process processes[], char* filename){
 
 
+
+
     // Initialize variables
     int num_processes = 0;
-    // Process processes[MAX_PROCESSES];
-    // Process process;
+    int pid, arrival_time, burst_time;
+
+
     char line[256];
 
-    FILE* fp = fopen(filename, "r");
-    if (fp == NULL) {
+    FILE* file = fopen(filename, "r");
+    if (file == NULL) {
         printf("Error opening file %s\n", filename);
         exit(1);
     }
 
+    printf("\nopened file hoopefuperfeoifjso\n");
 
     // Parse input file and store processes in array
-    while (fgets(line, sizeof(line), filename)) {
+    while (fgets(line, sizeof(line), file)) {
+        // Process cur_process = processes[num_processes];
+        Process cur_process;
+
         char* processName = strtok(line, ",");
-        processes[num_processes].pid = atoi(processName);
+        // cur_process.pid = atoi(processName);
 
         char* burstTime = strtok(NULL, ",");
-        processes[num_processes].burst_time = atoi(burstTime);
+        int burst_time = atoi(burstTime);
+
+   
+        strncpy(cur_process.name, processName, MAX_NAME_LENGTH);
 
         // arrival time is same as line read
-        processes[num_processes].arrival_time = num_processes;
-        processes[num_processes].remaining_time = processes[num_processes].burst_time;
+        cur_process.arrival_time = num_processes;
+        cur_process.burst_time=burst_time;
+        cur_process.remaining_time = burst_time;
+    
 
         // initialize wait and turnaround times to 0
-        processes[num_processes].wait_time = 0;
-        processes[num_processes].turnaround_time = 0;
+        cur_process.wait_time = 0;
+        cur_process.turnaround_time = 0;
 
         // initialize completed state to 0
-        processes[num_processes].turnaround_time = 0;
+        cur_process.turnaround_time = 0;
 
-        //incremment number of processes
-        // processes[num_processes] = process;
+        //increment number of processes
+        processes[num_processes] = cur_process;
         num_processes++;
-    }
-    fclose(filename); 
-    return num_processes;
-}
 
+    }
+    fclose(file); 
+
+    return num_processes;
+
+}
 
 
 
