@@ -64,17 +64,11 @@ int main(int argc, char* argv[]) {
     }
 
 
-    
-    printf("filename: %s\n", filename);
-    printf("quantum: %d\n",quantum);
-
     // initialize processes array 
     Process array[MAX_PROCESSES];
 
     // Read processes from file
     int num_processes = read_processes(array, filename);
-
-    printf("\nread_processes ran successfully...\n");
 
     // Get quantum parameter if -r is specified
     if (strcmp(algorithm, "-r") == 0) {
@@ -94,10 +88,10 @@ int main(int argc, char* argv[]) {
         // printf("this would simulate SJF");
 
     } else if (strcmp(algorithm, "-s") == 0) {
-        // simulateSJF();
-        printf("this would simulate SJF");
+        simulateSJF(array, num_processes);
+        // printf("this would simulate SJF");
     } else if (strcmp(algorithm, "-r") == 0) {
-        // simulateRR();
+        // simulateRR(array, num_processes);
         printf("this would simulate RR");
 
     } else {
@@ -131,7 +125,7 @@ int read_processes(Process processes[], char* filename){
         Process cur_process;
 
         char* processName = strtok(line, ",");
-        // cur_process.pid = atoi(processName);
+        cur_process.pid = atoi(processName);
 
         char* burstTime = strtok(NULL, ",");
         int burst_time = atoi(burstTime);
@@ -140,7 +134,7 @@ int read_processes(Process processes[], char* filename){
         strncpy(cur_process.name, processName, MAX_NAME_LENGTH);
 
         // arrival time is same as line read
-        cur_process.pid = num_processes;
+        // cur_process.pid = num_processes;
         cur_process.arrival_time = num_processes;
         cur_process.burst_time=burst_time;
         cur_process.remaining_time = burst_time;
@@ -152,6 +146,8 @@ int read_processes(Process processes[], char* filename){
 
         // initialize completed state to 0
         cur_process.turnaround_time = 0;
+
+        cur_process.completed = 0;
 
         //increment number of processes
         processes[num_processes] = cur_process;
@@ -174,61 +170,32 @@ void simulateFCFS(Process* processes, int num_processes) {
     int current_time = 0;
     int total_waiting_time = 0;
     int total_turnaround_time = 0;
-
-    // while (1) {
-    //     int all_finished = 1;
-
-        for (int i = 0; i < num_processes; i++) {
-            int tick = 0;
+    for (int i = 0; i < num_processes; i++) {
+            // int tick = 0;
             Process current = processes[i];
             current.wait_time = current_time - current.arrival_time;
 
+
             while(current.remaining_time > 0){
-                current.turnaround_time = current_time = current.arrival_time;
-                printf("T%d : %s \t - Burst left \t%d, Wait time \t%d, Turnaround time \t%d\n", tick,
+                current.turnaround_time = current_time - current.arrival_time;
+                printf("T%d : %s \t - Burst left \t%d, Wait time \t%d, Turnaround time \t%d\n", current_time,
                     current.name, current.remaining_time, current.wait_time, current.turnaround_time);
                 current_time++;
                 current.remaining_time--;
-            tick++;
             }
             processes[i].wait_time = current.wait_time;
             processes[i].turnaround_time = current.turnaround_time+1;
             total_waiting_time += processes[i].wait_time;
             total_turnaround_time += processes[i].turnaround_time;
-            // if (!processes[i].completed) {
-            //     all_finished = 0;
-            //     if (processes[i].arrival_time <= current_time) {
-            //         printf("T%d : %s \t - Burst left \t%d, Wait time \t%d, Turnaround time \t%d\n", processes[i].pid,
-            //         processes[i].name, processes[i].remaining_time, processes[i].wait_time, processes[i].turnaround_time);
 
-
-            //         processes[i].wait_time = current_time - processes[i].arrival_time;
-
-            //         total_waiting_time += processes[i].wait_time;
-
-            //         processes[i].turnaround_time = processes[i].wait_time + processes[i].burst_time;
-
-            //         total_turnaround_time += processes[i].turnaround_time;
-
-            //         processes[i].completed = 1;
-            //         // printf("T%d : P%d \t - Burst left \t%d, Wait time \t%d, Turnaround time \t%d\n", processes[i].pid,
-            //         // processes[i].name, processes[i].remaining_time, processes[i].wait_time, processes[i].turnaround_time);
-            //     }
-            // }
-
-
-
-        }
-        // if (all_finished) {
-        //     break;
-        // }
-        // current_time++;
-    // }
+            // printf("\t Waiting time: \t %d", total_waiting_time);
+            // printf("\t Turnaround time: \t %d", total_turnaround_time);
+    }
 
     double avg_waiting_time = (double) total_waiting_time / num_processes;
     double avg_turnaround_time = (double) total_turnaround_time / num_processes;
-    printf("Average waiting time: %.1f\n", avg_waiting_time);
-    printf("Average turnaround time: %.1f\n", avg_turnaround_time);
+    printf("\n\n Total average waiting time: %.1f", avg_waiting_time);
+    printf("Total average turnaround time: %.1f\n", avg_turnaround_time);
 }
 
 
@@ -236,3 +203,48 @@ void simulateFCFS(Process* processes, int num_processes) {
 
 
 
+// Function to simulate Shortest Job First algorithm
+void simulateSJF(Process* processes, int num_processes) {
+    printf("Shortest Job First\n");
+    int current_time = 0;
+    int completed_processes = 0;
+    int shortest_job_index = -1;
+    int shortest_job_burst_time = 99999; // A very large number to start with
+    
+    // Loop until all processes are completed
+    while (completed_processes < num_processes) {
+        // Find the process with shortest burst time
+        for (int i = 0; i < num_processes; i++) {
+            if (processes[i].burst_time > 0 && processes[i].arrival_time <= current_time) {
+                if (processes[i].burst_time < shortest_job_burst_time) {
+                    shortest_job_burst_time = processes[i].burst_time;
+                    shortest_job_index = i;
+                }
+            }
+        }
+        
+        // If a process was found, simulate its execution for one unit of time
+        if (shortest_job_index != -1) {
+            processes[shortest_job_index].burst_time--;
+            
+            // Update wait and turnaround times for other processes
+            for (int i = 0; i < num_processes; i++) {
+                if (processes[i].burst_time > 0 && processes[i].arrival_time <= current_time && i != shortest_job_index) {
+                    processes[i].wait_time++;
+                    processes[i].turnaround_time++;
+                }
+            }
+            
+            // If the process has completed its burst time, update its completion time and move to the next process
+            if (processes[shortest_job_index].burst_time == 0) {
+                processes[shortest_job_index].turnaround_time = current_time - processes[shortest_job_index].arrival_time + 1;
+                completed_processes++;
+                shortest_job_burst_time = 99999;
+                shortest_job_index = -1;
+            }
+        }
+        
+        current_time++;
+    }
+
+}
