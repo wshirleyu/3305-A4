@@ -198,102 +198,117 @@ void simulateFCFS(Process* processes, int num_processes) {
 
 
 // Function to simulate Shortest Job First algorithm
-// void simulateSJF(Process* processes, int num_processes) {
-//     printf("Shortest Job First\n");
-//     int current_time = 0;
-//     int completed_processes = 0;
-//     int shortest_job_index = -1;
-//     int shortest_job_burst_time = 99999; // A very large number to start with
-//     int total_waiting_time = 0;
-//     int total_turnaround_time = 0;
-
-//     printf("\nnum processes: %d", num_processes);
+void simulateSJF(Process* processes, int num_processes) {
+    printf("Shortest Job First\n");
+    int current_time = 0;
+    int completed_processes = 0;
+    int shortest_job_index = -1;
+    int shortest_job_burst_time = 99999; // A very large number to start with
+    int total_waiting_time = 0;
+    int total_turnaround_time = 0;
     
-//     // Loop until all processes are completed
-//     while (completed_processes < num_processes) {
-//         // Find the process with shortest burst time
-//         for (int i = 0; i < num_processes; i++) {
-//             if (processes[i].burst_time > 0 && processes[i].arrival_time <= current_time) {
-//                 if (processes[i].burst_time < shortest_job_burst_time) {
-//                     shortest_job_burst_time = processes[i].burst_time;
-//                     shortest_job_index = i;
-//                 }
-//             }
-//         }
-        
-//         // If a process was found, simulate its execution for one unit of time
-//         if (shortest_job_index != -1) {
-//             processes[shortest_job_index].burst_time--;
-            
-//             // Update wait and turnaround times for other processes
-//             for (int i = 0; i < num_processes; i++) {
-//                 if (processes[i].burst_time > 0 && processes[i].arrival_time <= current_time && i != shortest_job_index) {
-//                     processes[i].wait_time++;
-//                     processes[i].turnaround_time++;
-//                 }
-//                 total_waiting_time += processes[i].wait_time;
-//                 total_turnaround_time += processes[i].turnaround_time;  
-//                 printf("T%d : %s \t - Burst left \t%d, Wait time \t%d, Turnaround time \t%d\n", current_time,
-//                     processes[i].name, processes[i].remaining_time, processes[i].wait_time, processes[i].turnaround_time);            
-//             }
-            
-//             // If the process has completed its burst time, update its completion time and move to the next process
-//             if (processes[shortest_job_index].burst_time == 0) {
-//                 processes[shortest_job_index].turnaround_time = current_time - processes[shortest_job_index].arrival_time + 1;
-//                 completed_processes++;
-//                 shortest_job_burst_time = 99999;
-//                 shortest_job_index = -1;
-//             }
-//         }
-        
-//         current_time++;
+    // Loop until all processes are completed
+    while (completed_processes < num_processes) {
 
-//     }
-//     double avg_waiting_time = (double) total_waiting_time / num_processes;
-//     double avg_turnaround_time = (double) total_turnaround_time / num_processes;
-//     printf("\n\n Total average waiting time: %.1f", avg_waiting_time);
-//     printf("\nTotal average turnaround time: %.1f\n", avg_turnaround_time);
+        // account for when the only process that has arrived is p0
+        if(current_time <=0){
+            printf("T%d : %s \t - Burst left \t%d, Wait time \t%d, Turnaround time \t%d, Arrival time \t %d\n", current_time,
+            processes[0].name, processes[0].burst_time, processes[0].wait_time, processes[0].turnaround_time, processes[0].arrival_time);  
+            processes[0].burst_time--;
+            current_time++;
+        }
 
-// }
-
-void simulateSJF(Process* procs, int n) {
-    int count=0;
-    int time = 0, done = 0, cur = -1;
-    float avg_wait = 0, avg_turn = 0;
-    printf("Time\tProcess ID\n");
-    while (done < n) {
-        // Find process with smallest remaining burst time
-        int nxt = -1;
-        for (int i = 0; i < n; i++) {
-            if (procs[i].remaining_time > 0 && (nxt == -1 || procs[i].remaining_time < procs[nxt].remaining_time)) {
-                nxt = i;
+        // Find the process with shortest burst time
+        for (int i = 0; i < num_processes; i++) {
+            if (processes[i].burst_time > 0 && processes[i].arrival_time <= current_time) {
+                if (processes[i].burst_time < shortest_job_burst_time) {
+                    shortest_job_burst_time = processes[i].burst_time;
+                    shortest_job_index = i;
+                }
             }
         }
-        // If there is a process with a smaller burst time than the current process, switch to that process
-        if (cur != nxt) {
-            if (cur != -1) {
-                printf("%d\t%d\n", time, procs[cur].pid);
+        
+        // If a process was found, simulate its execution for one unit of time
+        if (shortest_job_index != -1) {
+            Process current = processes[shortest_job_index];
+            // printf("shortest process: %s", current.name);
+
+            processes[shortest_job_index].burst_time--;
+      
+            // Update wait and turnaround times for other processes
+            for (int i = 0; i < num_processes; i++) {
+                if (processes[i].burst_time > 0 && processes[i].arrival_time <= current_time && i != shortest_job_index) {
+                    processes[i].wait_time++;
+                }else if (processes[i].burst_time > 0 && processes[i].arrival_time <= current_time){
+                    processes[i].turnaround_time++;
+                }
             }
-            cur = nxt;
+
+            // If the process has completed its burst time, update its completion time and move to the next process
+            if (processes[shortest_job_index].burst_time == 0) {
+                processes[shortest_job_index].turnaround_time = current_time - processes[shortest_job_index].arrival_time + 1;
+                completed_processes++;
+                shortest_job_burst_time = 99999;
+                shortest_job_index = -1;
+            }
+            printf("T%d : %s \t - Burst left \t%d, Wait time \t%d, Turnaround time \t%d, Arrival time \t %d\n", current_time,
+            current.name, current.burst_time, current.wait_time, current.turnaround_time, current.arrival_time);    
+  
+       
         }
-        // Decrement remaining burst time of current process
-        procs[cur].remaining_time--;
-        // If process is finished, update wait and turnaround times and move to the next process
-        if (procs[cur].remaining_time == 0) {
-            done++;
-            procs[cur].wait_time = time - procs[cur].burst_time - procs[cur].arrival_time;
-            procs[cur].turnaround_time = time - procs[cur].arrival_time;
-            avg_wait += procs[cur].wait_time;
-            avg_turn += procs[cur].turnaround_time;
-            cur = -1;
-        }
-        time++;
+        // Process shortest = processes[shortest_job_index];
+        // total_waiting_time += shortest.wait_time;
+        // total_turnaround_time += shortest.turnaround_time;  
+        // printf("T%d : %s \t - Burst left \t%d, Wait time \t%d, Turnaround time \t%d\n", current_time,
+        // shortest.name, shortest.remaining_time, shortest.wait_time, shortest.turnaround_time);     
+        current_time++;
+
     }
-    // Print wait and turnaround times for each process
-    printf("\nProcess\tWait Time\tTurnaround Time\n");
-    for (int i = 0; i < n; i++) {
-        printf("%d\t%d\t\t%d\n", time, procs[i].wait_time, procs[i].turnaround_time);
-    }
-    // Print average wait and turnaround times
-    printf("\nAverage Wait Time: %.1f\nAverage Turnaround Time: %.1f\n", avg_wait / n, avg_turn / n);
+    double avg_waiting_time = (double) total_waiting_time / num_processes;
+    double avg_turnaround_time = (double) total_turnaround_time / num_processes;
+    printf("\n\n Total average waiting time: %.1f", avg_waiting_time);
+    printf("\nTotal average turnaround time: %.1f\n", avg_turnaround_time);
+
 }
+
+// void simulateSJF(Process* procs, int n) {
+//     int count=0;
+//     int time = 0, done = 0, cur = -1;
+//     float avg_wait = 0, avg_turn = 0;
+//     printf("Time\tProcess ID\n");
+//     while (done < n) {
+//         // Find process with smallest remaining burst time
+//         int nxt = -1;
+//         for (int i = 0; i < n; i++) {
+//             if (procs[i].remaining_time > 0 && (nxt == -1 || procs[i].remaining_time < procs[nxt].remaining_time)) {
+//                 nxt = i;
+//             }
+//         }
+//         // If there is a process with a smaller burst time than the current process, switch to that process
+//         if (cur != nxt) {
+//             if (cur != -1) {
+//                 printf("%d\t%d\n", time, procs[cur].pid);
+//             }
+//             cur = nxt;
+//         }
+//         // Decrement remaining burst time of current process
+//         procs[cur].remaining_time--;
+//         // If process is finished, update wait and turnaround times and move to the next process
+//         if (procs[cur].remaining_time == 0) {
+//             done++;
+//             procs[cur].wait_time = time - procs[cur].burst_time - procs[cur].arrival_time;
+//             procs[cur].turnaround_time = time - procs[cur].arrival_time;
+//             avg_wait += procs[cur].wait_time;
+//             avg_turn += procs[cur].turnaround_time;
+//             cur = -1;
+//         }
+//         time++;
+//     }
+//     // Print wait and turnaround times for each process
+//     printf("\nProcess\tWait Time\tTurnaround Time\n");
+//     for (int i = 0; i < n; i++) {
+//         printf("%d\t%d\t\t%d\n", time, procs[i].wait_time, procs[i].turnaround_time);
+//     }
+//     // Print average wait and turnaround times
+//     printf("\nAverage Wait Time: %.1f\nAverage Turnaround Time: %.1f\n", avg_wait / n, avg_turn / n);
+// }
