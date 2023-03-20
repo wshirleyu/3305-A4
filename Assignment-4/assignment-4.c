@@ -103,8 +103,6 @@ int main(int argc, char* argv[]) {
 }
 
 
-
-
 // Function to read input from file and store processes in an array
 int read_processes(Process processes[], char* filename){
 
@@ -162,8 +160,6 @@ int read_processes(Process processes[], char* filename){
 
 
 
-
-
 // Function to simulate First Come First Served algorithm
 void simulateFCFS(Process* processes, int num_processes) {
     printf("First Come First Served\n");
@@ -194,11 +190,9 @@ void simulateFCFS(Process* processes, int num_processes) {
 
     double avg_waiting_time = (double) total_waiting_time / num_processes;
     double avg_turnaround_time = (double) total_turnaround_time / num_processes;
-    printf("\n\n Total average waiting time: %.1f", avg_waiting_time);
+    printf("\n\n Total average waiting time: %.1f\n", avg_waiting_time);
     printf("Total average turnaround time: %.1f\n", avg_turnaround_time);
 }
-
-
 
 
 
@@ -210,6 +204,10 @@ void simulateSJF(Process* processes, int num_processes) {
     int completed_processes = 0;
     int shortest_job_index = -1;
     int shortest_job_burst_time = 99999; // A very large number to start with
+    int total_waiting_time = 0;
+    int total_turnaround_time = 0;
+
+    printf("\nnum processes: %d", num_processes);
     
     // Loop until all processes are completed
     while (completed_processes < num_processes) {
@@ -233,6 +231,10 @@ void simulateSJF(Process* processes, int num_processes) {
                     processes[i].wait_time++;
                     processes[i].turnaround_time++;
                 }
+                total_waiting_time += processes[i].wait_time;
+                total_turnaround_time += processes[i].turnaround_time;  
+                printf("T%d : %s \t - Burst left \t%d, Wait time \t%d, Turnaround time \t%d\n", current_time,
+                    processes[i].name, processes[i].remaining_time, processes[i].wait_time, processes[i].turnaround_time);            
             }
             
             // If the process has completed its burst time, update its completion time and move to the next process
@@ -245,6 +247,11 @@ void simulateSJF(Process* processes, int num_processes) {
         }
         
         current_time++;
+
     }
+    double avg_waiting_time = (double) total_waiting_time / num_processes;
+    double avg_turnaround_time = (double) total_turnaround_time / num_processes;
+    printf("\n\n Total average waiting time: %.1f", avg_waiting_time);
+    printf("\nTotal average turnaround time: %.1f\n", avg_turnaround_time);
 
 }
