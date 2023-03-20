@@ -24,88 +24,61 @@ typedef struct{
 } Process;
 
 
-// function to simulate first-come-first-serve algorithm
-void fcfs(int num_processes, int burst_time[]){
-    int current_time = 0;
-    int wait_time[num_processes], turnaround_time[num_processes];
-    int arrival_time;
-    
-    // Initialize wait and turnaround times to 0
-    for (int i = 0; i < num_processes; i++) {
-        wait_time[i] = 0;
-        turnaround_time[i] = 0;
-    }
-    
-    // Iterate through each process
-    for (int i = 0; i < num_processes; i++) {
-
-        scanf("P%d", &arrival_time);
-        printf("\nArrival time: %d", arrival_time);
-
-        // Calculate wait time for current process
-        if (current_time > arrival_time[i]) {
-            wait_time[i] = current_time - arrival_time[i];
-        }
-        
-        // Execute current process
-        current_time += burst_time[i];
-        
-        // Calculate turnaround time for current process
-        turnaround_time[i] = current_time - arrival_time[i];
-    }
-    
-    // Calculate and print average wait and turnaround times
-    float avg_wait_time = 0, avg_turnaround_time = 0;
-    for (int i = 0; i < num_processes; i++) {
-        avg_wait_time += wait_time[i];
-        avg_turnaround_time += turnaround_time[i];
-    }
-    avg_wait_time /= num_processes;
-    avg_turnaround_time /= num_processes;
-    printf("Average wait time: %.1f\n", avg_wait_time);
-    printf("Average turnaround time: %.1f\n", avg_turnaround_time);
-}
-
 
 // MAIN METHOD
 int main(int argc, char *argv[]) {
+    printf("Entering main method!\n");
 
     // string var for algorithm type
-    char algo;
+    char* algo="";
     // int var to store quantum value for RR 
-    int quantum;
+    int quantum = 0;
     // string var to store filename
-    char file;
+    char* file="";
+
 
     char allProcesses;
 
     // verify command line parameter input
     if (argc > 4 || argc < 3) {
-        printf("-- Invalid parameters (%d) --", argv[1]);
+        // printf("-- Invalid parameters (%c) --", argv[1]);
         printf("Proper usage is ./assignment-4 [-f|-s|-r <quantum>] <Input file name>\n");
         return 1;
     }
 
+    printf("\n argv1: %c", argv[1][1]);
+    printf("\n argv2: %s", argv[2]);
+
+
+
     // read choice of scheduling algorithm from command line input
-    algo = argv[1][1];
-    // quantum default value is 0
-    quantum = 0;
+    // algo = argv[1][1];
+    algo = argv[1];
+
+    printf("\nalgorithm input: %c", algo);
+
     // if RR algorithm is chosen, set quantum value according to CL input
-    if (algo == 'r'){
+    if (algo == '-r'){
         quantum = atoi(argv[2]);
         file = argv[3]; // if RR selected, set filename from 3rd index of argv CLI
+        // printf("\n Filename: %s", &file);
     }
     else{
         file = argv[2]; // if RR not selected, set filename from 2nd index of argv CLI
+        // printf("\n Filename: %s", &file);
+
     }
 
-    printf("Chosen algorithm: %s \n", algo);
+    printf("\nChosen algorithm: %c \n", algo);
 
     // read input file
+    FILE* input_file = fopen("/assignment-4-input.csv", "r");
     // FILE* input_file = fopen("assignment-4-input.csv", "r");
-    FILE* input_file = fopen(file, "r");
+    printf("\n FILE OPENED");
+    // FILE* input_file = fopen(&file, "r");
     if (!input_file) {
-        printf("Could not open %s \n", file);
+        // printf("Could not open %s \n", file);
+        printf("Could not open file\n");
         return 1;
     }
 
@@ -115,7 +88,7 @@ int main(int argc, char *argv[]) {
     char line[256];
     // parse file 
 
-    while (fgets(line, sizeof(line), file) != NULL) {
+    while (fgets(line, sizeof(line), input_file) != NULL) {
         // Parse process number and burst time from the line
         int processNum, burstTime;
         sscanf(line, "%s,%d", &processNum, &burstTime);
@@ -133,41 +106,6 @@ int main(int argc, char *argv[]) {
     }
 
     fclose(input_file);
-
-    int current_time = 0;
-    int completed_processes = 0;
-    int total_wait_time = 0;
-    int total_turnaround_time = 0;
-
-    // apply chosen scheduling algorithm to file input
-
-    while (completed_processes < atoi(argv[1])) {
-        int selected_pid = -1;
-
-        if (strcmp(algo, "-f") == 0) {
-            for (int i = 0; i < atoi(argv[1]); i++) {
-                if (processes[i].arrival_time <= current_time) {
-                    selected_pid = i;
-                    break;
-                }
-            }
-        }
-        printf("checkpoint 1 passed\n");
-    }
-    
-    // Calculate statistics
-    int total_wait_time = 0;
-    int total_turnaround_time = 0;
-    for (int i = 0; i < num_processes; i++) {
-        total_wait_time += processes[i].wait_time;
-        total_turnaround_time += processes[i].turnaround_time;
-    }
-    double avg_wait_time = (double)total_wait_time / num_processes;
-    double avg_turnaround_time = (double)total_turnaround_time / num_processes;
-
-    // Print statistics
-    printf("Average wait time: %.1f\n", avg_wait_time);
-    printf("Average turnaround time: %.1f\n", avg_turnaround_time);
 
 
 }
