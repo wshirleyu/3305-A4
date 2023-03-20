@@ -240,7 +240,6 @@ void simulateSJF(Process* processes, int num_processes) {
                     total_waiting_time++;
                 }else if (processes[i].burst_time > 0 && processes[i].arrival_time <= current_time){
                     processes[i].turnaround_time++;
-                    // total_turnaround_time++;
                 }
             }
 
@@ -253,8 +252,8 @@ void simulateSJF(Process* processes, int num_processes) {
                 // total_turnaround_time = processes[shortest_job_index].turnaround_time;
                 // printf("\ntotal turnaround time: %d", total_turnaround_time);
             }
-            printf("T%d : %s \t - Burst left \t%d, Wait time \t%d, Turnaround time \t%d, Arrival time \t %d\n", current_time,
-            current.name, current.burst_time, current.wait_time, current.turnaround_time, current.arrival_time);    
+            printf("T%d : %s \t - Burst left \t%d, Wait time \t%d, Turnaround time \t%d\n", current_time,
+            current.name, current.burst_time, current.wait_time, current.turnaround_time);    
   
        
         }
@@ -268,7 +267,6 @@ void simulateSJF(Process* processes, int num_processes) {
         total_turnaround_time = total_turnaround_time + processes[i].turnaround_time;
     }
 
-    printf("\ntotal turnaround time: %d", total_turnaround_time);
     double avg_waiting_time = (double) total_waiting_time / num_processes;
     double avg_turnaround_time = (double) total_turnaround_time / num_processes;
     printf("\n\nTotal average waiting time: %.1f", avg_waiting_time);
