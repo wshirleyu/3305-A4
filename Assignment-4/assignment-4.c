@@ -90,8 +90,8 @@ int main(int argc, char* argv[]) {
 
     // Simulate selected algorithm
     if (strcmp(algorithm, "-f") == 0) {
-        // simulateFCFS();
-        printf("this would simulate SJF");
+        simulateFCFS(array, num_processes);
+        // printf("this would simulate SJF");
 
     } else if (strcmp(algorithm, "-s") == 0) {
         // simulateSJF();
@@ -114,13 +114,8 @@ int main(int argc, char* argv[]) {
 // Function to read input from file and store processes in an array
 int read_processes(Process processes[], char* filename){
 
-
-
-
     // Initialize variables
     int num_processes = 0;
-    int pid, arrival_time, burst_time;
-
 
     char line[256];
 
@@ -129,8 +124,6 @@ int read_processes(Process processes[], char* filename){
         printf("Error opening file %s\n", filename);
         exit(1);
     }
-
-    printf("\nopened file hoopefuperfeoifjso\n");
 
     // Parse input file and store processes in array
     while (fgets(line, sizeof(line), file)) {
@@ -147,6 +140,7 @@ int read_processes(Process processes[], char* filename){
         strncpy(cur_process.name, processName, MAX_NAME_LENGTH);
 
         // arrival time is same as line read
+        cur_process.pid = num_processes;
         cur_process.arrival_time = num_processes;
         cur_process.burst_time=burst_time;
         cur_process.remaining_time = burst_time;
@@ -176,31 +170,60 @@ int read_processes(Process processes[], char* filename){
 
 // Function to simulate First Come First Served algorithm
 void simulateFCFS(Process* processes, int num_processes) {
+    printf("First Come First Served\n");
     int current_time = 0;
     int total_waiting_time = 0;
     int total_turnaround_time = 0;
 
-    while (1) {
-        int all_finished = 1;
+    // while (1) {
+    //     int all_finished = 1;
+
         for (int i = 0; i < num_processes; i++) {
-            if (!processes[i].completed) {
-                all_finished = 0;
-                if (processes[i].arrival_time <= current_time) {
-                    processes[i].wait_time = current_time - processes[i].arrival_time;
-                    total_waiting_time += processes[i].wait_time;
-                    processes[i].turnaround_time = processes[i].wait_time + processes[i].burst_time;
-                    total_turnaround_time += processes[i].turnaround_time;
-                    processes[i].completed = 1;
-                    printf("Process %d finished at time %d. Wait time: %d, Turnaround time: %d\n",
-                            processes[i].pid, current_time, processes[i].wait_time, processes[i].turnaround_time);
-                }
+            int tick = 0;
+            Process current = processes[i];
+            current.wait_time = current_time - current.arrival_time;
+
+            while(current.remaining_time > 0){
+                current.turnaround_time = current_time = current.arrival_time;
+                printf("T%d : %s \t - Burst left \t%d, Wait time \t%d, Turnaround time \t%d\n", tick,
+                    current.name, current.remaining_time, current.wait_time, current.turnaround_time);
+                current_time++;
+                current.remaining_time--;
+            tick++;
             }
+            processes[i].wait_time = current.wait_time;
+            processes[i].turnaround_time = current.turnaround_time+1;
+            total_waiting_time += processes[i].wait_time;
+            total_turnaround_time += processes[i].turnaround_time;
+            // if (!processes[i].completed) {
+            //     all_finished = 0;
+            //     if (processes[i].arrival_time <= current_time) {
+            //         printf("T%d : %s \t - Burst left \t%d, Wait time \t%d, Turnaround time \t%d\n", processes[i].pid,
+            //         processes[i].name, processes[i].remaining_time, processes[i].wait_time, processes[i].turnaround_time);
+
+
+            //         processes[i].wait_time = current_time - processes[i].arrival_time;
+
+            //         total_waiting_time += processes[i].wait_time;
+
+            //         processes[i].turnaround_time = processes[i].wait_time + processes[i].burst_time;
+
+            //         total_turnaround_time += processes[i].turnaround_time;
+
+            //         processes[i].completed = 1;
+            //         // printf("T%d : P%d \t - Burst left \t%d, Wait time \t%d, Turnaround time \t%d\n", processes[i].pid,
+            //         // processes[i].name, processes[i].remaining_time, processes[i].wait_time, processes[i].turnaround_time);
+            //     }
+            // }
+
+
+
         }
-        if (all_finished) {
-            break;
-        }
-        current_time++;
-    }
+        // if (all_finished) {
+        //     break;
+        // }
+        // current_time++;
+    // }
 
     double avg_waiting_time = (double) total_waiting_time / num_processes;
     double avg_turnaround_time = (double) total_turnaround_time / num_processes;
