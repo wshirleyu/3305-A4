@@ -25,6 +25,7 @@ typedef struct {
     int wait_time;
     int turnaround_time;
     int completed;
+    int arrived;
 
 } Process;
 
@@ -134,6 +135,7 @@ int read_processes(Process processes[], char* filename){
 
         // initialize completed state to 0
         cur_process.completed = 0;
+        cur_process.arrived = 0;
     
 
         //increment number of processes
@@ -146,7 +148,6 @@ int read_processes(Process processes[], char* filename){
     return num_processes;
 
 }
-
 
 
 // Function to simulate First Come First Served algorithm
@@ -255,110 +256,17 @@ void simulateSJF(Process* processes, int num_processes) {
 
 }
 
-// void simulateRR(Process* processes, int num_processes, int quantum){
-//     printf("Round Robin with Quantum %d\n", quantum);
-//     int time = 0;
-//     int remaining_processes = num_processes;
-//     int active = -1;
-//     int time_quantum_left = 0;
-//     double total_wait_time = 0;
-//     double total_turnaround_time = 0;
 
-
-//     while (remaining_processes > 0) {
-//         // Check for new arrivals
-//         for (int i = 0; i < num_processes; i++) {
-//             if (processes[i].arrival_time == time) {
-//                 processes[i].remaining_time = processes[i].burst_time;
-//             }
-//         }
-
-//         // Check for preemption
-//         if (active != -1 && time_quantum_left == 0) {
-//             processes[active].wait_time += time - processes[active].turnaround_time -1;
-//             // printf("\n active process wait time: %d", processes[active].wait_time);
-//             active = -1;
-//             // printf("process %s is active\n", processes[active].name);
-//         }
-
-//         // Choose a new process if none are active
-//         if (active == -1) {
-//             for (int i = 0; i < num_processes; i++) {
-//                 if (processes[i].remaining_time > 0) {
-//                     active = i;
-//                     // printf("\n value of i: %d", i);
-//                     time_quantum_left = quantum;
-//                     processes[i].wait_time = time;
-//                     // printf("\n other wait time checkpoint: %d", processes[i].wait_time);
-//                     break;
-//                 }
-//             }
-//         }
-
-//         // Run the active process for one tick
-//         if (active != -1) {
-//             printf("\nT%d : %s \t - Burst left \t%d, Wait time \t%d, Turnaround time \t%d, Arrival time \t%d\n", time,
-//             processes[active].name, processes[active].remaining_time, processes[active].wait_time, 
-//             processes[active].turnaround_time, processes[active].arrival_time);
-
-//             processes[active].remaining_time--;
-//             time_quantum_left--;
-//             processes[active].turnaround_time = time-processes[active].arrival_time;
-//             // printf("\ncurrent tick turnaround time: %d", processes[active].turnaround_time);
-//             // printf("\nT%d : %s \t - Burst left \t%d, Wait time \t%d, Turnaround time \t%d\n", time,
-//             // processes[active].name, processes[active].remaining_time, processes[active].wait_time, 
-//             // processes[active].turnaround_time);
-
-//             // check if process has completed
-//             // if (processes[active].remaining_time == 0) {
-//             //     processes[active].turnaround_time = time + 1 - processes[active].arrival_time;
-//             //     remaining_processes--;
-//             //     active = -1;
-//             //     time_quantum_left = 0;
-//             // }
-
-//         }
-
-//         // Increment wait time and time
-//         // for (int i = 0; i < num_processes; i++) {
-//         //     if (processes[i].remaining_time > 0 && i != active) {
-//         //         // printf("\nwait time before incremeneting: %d", processes[i].wait_time);
-//         //         processes[i].wait_time++;
-//         //     }
-//         // }
-
-//         time++;
-//         //current process current process 1 % numprocess
-//     }
-
-//     // Print results
-//     // double total_wait_time = 0;
-//     // double total_turnaround_time = 0;
-
-//     // printf("Tick\tProcess\tRemaining Time\n");
-//     for (int i = 0; i < num_processes; i++) {
-//         // printf("%d\tP%d\t%d\n", i, processes[i].pid, processes[i].remaining_time);
-//         total_wait_time += processes[i].wait_time;
-//         total_turnaround_time += processes[i].turnaround_time;
-//     }
-//     printf("\ntotal wait: %d", total_wait_time);
-//     printf("\ntotal turnaround: %d", total_turnaround_time);
-
-//     double avg_wait_time = total_wait_time / num_processes;
-//     double avg_turnaround_time = total_turnaround_time / num_processes;
-
-//     printf("\nAverage wait time: %.1lf\n", avg_wait_time);
-//     printf("Average turnaround time: %.1lf\n", avg_turnaround_time);
-// }
-
-
+// Function to simulate Round Robin algorithm
 void simulateRR(Process* processes, int num_processes, int quantum){
     printf("Round Robin with Quantum %d\n", quantum);
     int time = 0;
     int remaining_processes = num_processes;
-    int active_process = -1;
+    int active = 0;
     int time_quantum_left = 0;
 
+
+    // loop through all processes that haven't finished
     while (remaining_processes > 0) {
         // Check for new arrivals
         for (int i = 0; i < num_processes; i++) {
@@ -368,62 +276,112 @@ void simulateRR(Process* processes, int num_processes, int quantum){
         }
 
         // Check for preemption
-        if (active_process != -1 && time_quantum_left == 0) {
-            processes[active_process].wait_time += time - processes[active_process].turnaround_time;
-            active_process = -1;
+        if (active != 0 && time_quantum_left == 0) {
+            processes[active].wait_time += time - processes[active].turnaround_time;
+            active = 0;
         }
-        else{
+        
+        
+        // Choose a new process if there are no active processes
+        if (active == 0) {
 
-            
-            // Choose a new process if none is active
-            if (active_process == -1) {
-                for (int i = 0; i < num_processes; i++) {
-                    if (processes[i].burst_time > 0) {
-                        active_process = i;
-                        time_quantum_left = quantum;
-                        break;
+            // loop through processes
+            for (int i = 0; i < num_processes; i++) {
+
+                // check if process has remaining time to run
+                if (processes[i].remaining_time > 0) {
+
+                    active = i; // this process is now active 
+                    time_quantum_left = quantum; //window of time the process can run for
+
+                    // check if process will finish within this window
+                    if (processes[active].remaining_time <= quantum){
+                        int burst = processes[active].remaining_time;
+                        int turnaround = processes[active].turnaround_time;
+
+                        // execute process till finish
+                        for (int j=0; j<burst; j++){
+                            turnaround = time + 1 - processes[active].arrival_time;
+                            
+                            // if first tick of current burst, calculate wait time
+                            if (j==0){
+                                processes[active].wait_time = turnaround-processes[active].arrival_time;
+                            }
+                            printf("T%d : %s \t - Burst left \t%d, Wait time \t%d, Turnaround time \t%d\n", time,
+                            processes[active].name, processes[active].burst_time, processes[active].wait_time, 
+                            processes[active].turnaround_time);
+
+                            processes[active].remaining_time--;
+                            // time_quantum_left--;    
+                            time++;
+
+                        }
+                        // decrement number of remaining processes
+                        remaining_processes--;
+                        
+
+                    }else{ 
+                        // if process will not finish within this window
+                        // processes[active].wait_time = time - processes[active].arrival_time;
+                        // execute process up to quantum time point
+                        for (int j=0; j<quantum; j++){
+                            processes[active].turnaround_time = time - processes[active].arrival_time+1;
+
+                            if (j==0){
+                                processes[active].wait_time = processes[active].turnaround_time - processes[active].arrival_time;                                }
+                            }
+                            printf("T%d : %s \t - Burst left \t%d, Wait time \t%d, Turnaround time \t%d\n", time,
+                            processes[active].name, processes[active].burst_time, processes[active].wait_time, 
+                            processes[active].turnaround_time);
+
+                            time++;
+                            processes[active].remaining_time--;
+                            time_quantum_left--;
                     }
+                    break;
                 }
             }
+        }
 
             // Run the active process for one tick
-            if (active_process != -1) {
-                printf("T%d : %s \t - Burst left \t%d, Wait time \t%d, Turnaround time \t%d\n", time,
-                processes[active_process].name, processes[active_process].burst_time, processes[active_process].wait_time, 
-                processes[active_process].turnaround_time);
+            // if (active != -1) {
+            //     printf("T%d : %s \t - Burst left \t%d, Wait time \t%d, Turnaround time \t%d\n", time,
+            //     processes[active].name, processes[active].burst_time, processes[active].wait_time, 
+            //     processes[active].turnaround_time);
 
-                processes[active_process].burst_time--;
-                time_quantum_left--;
+            //     processes[active].remaining_time--;
+            //     time_quantum_left--;
+            //     processes[active].started++;
 
-                if (processes[active_process].burst_time == 0) {
-                    processes[active_process].turnaround_time = time + 1 - processes[active_process].arrival_time;
-                    remaining_processes--;
-                    active_process = -1;
-                    time_quantum_left = 0;
-                }
-                for(int i = 0; i < num_processes; i++){
-                    if(time >= processes[i].arrival_time && processes[i].burst_time!=0){
-                        processes[i].turnaround_time++;
-                    }
-                }
+                // if (processes[active].remaining_time == 0) {
+                //     processes[active].turnaround_time = time + 1 - processes[active].arrival_time;
+                //     remaining_processes--;
+                //     active = -1;
+                //     time_quantum_left = 0;
+                // }
+                // for(int i = 0; i < num_processes; i++){
+                //     if(time >= processes[i].arrival_time && processes[i].burst_time!=0){
+                //         processes[i].turnaround_time++;
+                //     }
+                // }
                 
 
-            }
+            
 
             // Increment wait time and time
-            for (int i = 0; i < num_processes; i++) {
-                // if ( processes[i].remaining_time > 0 && i != active_process) {
-                //     printf("\n %s's wait time: %d\n", processes[i].name, processes[i].wait_time);
-                //     processes[i].wait_time++;
-                // }
-                if(time>= processes[i].arrival_time && processes[i].burst_time!=0 && i !=active_process){
-                    processes[i].wait_time++;
-                }
-            }
+            // for (int i = 0; i < num_processes; i++) {
+            //     // if ( processes[i].remaining_time > 0 && i != active) {
+            //     //     printf("\n %s's wait time: %d\n", processes[i].name, processes[i].wait_time);
+            //     //     processes[i].wait_time++;
+            //     // }
+            //     if(time>= processes[i].arrival_time && processes[i].burst_time!=0 && i !=active){
+            //         processes[i].wait_time++;
+            //     }
+            // }
 
-        }
+        // }
 
-        time++;
+        // time++;
     }
 
     // Print results
